@@ -1,0 +1,15 @@
+# Folder virtual environment (jika Anda pakai)
+/venv/
+/env/
+/syarva/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# File sistem (jika di Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# File IDE (misal VS Code)
+.vscode/

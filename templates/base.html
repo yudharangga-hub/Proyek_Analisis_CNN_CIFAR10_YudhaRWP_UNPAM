@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard CNN{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header>
+        <img src="{{ url_for('static', filename='images/logo_unpam.png') }}" alt="Logo UNPAM" class="logo-unpam">
+        <h1>Dashboard Analisis ZOO CNN</h1>
+    </header>
+
+    <div class="scrolling-text-container">
+        <div class="scrolling-text">
+            Nama : Yudha Rangga Wulung Pura, NIM : 241012000151
+        </div>
+    </div>
+    
+    <nav class="tab-menu">
+        <a href="{{ url_for('home') }}" class="{{ 'active' if request.path == url_for('home') else '' }}">Analisis Interaktif</a>
+        <a href="{{ url_for('training_results') }}" class="{{ 'active' if request.path == url_for('training_results') else '' }}">Hasil Pelatihan</a>
+        <a href="{{ url_for('feature_maps') }}" class="{{ 'active' if request.path == url_for('feature_maps') else '' }}">Visualisasi Fitur</a>
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <p>2025 - Magister Teknik Informatika - Universitas Pamulang</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Hasil Pelatihan{% endblock %}
+{% block content %}
+    <div class="action-bar">
+        <h2>Analisis Plot Pelatihan</h2>
+    </div>
+
+    <div class="text-content">
+        <p>Di bawah ini adalah perbandingan hasil pelatihan antara model **Baseline** (hanya dilatih pada data bersih) dan model **Robust** (dilatih dengan data augmentasi, termasuk noise). Plot ini sangat penting untuk memahami *overfitting*.</p>
+    </div>
+
+    <div class="comparison-grid">
+        <div class="grid-item">
+            <h3>Model BASELINE</h3>
+            <img src="{{ url_for('static', filename='images/baseline_training_plot.png') }}" alt="Plot Baseline" style="width:100%">
+            <div class="text-content">
+                <p><strong>Penjelasan:</strong> Perhatikan! Garis 'Training Accuracy' (biru) terus naik, sementara 'Validation Accuracy' (oranye) stagnan/turun. Ini adalah tanda klasik **overfitting**. Model menjadi terlalu "hafal" data latih dan tidak bisa menggeneralisasi ke data baru (validasi).</p>
+            </div>
+        </div>
+        <div class="grid-item">
+            <h3>Model ROBUST</h3>
+            <img src="{{ url_for('static', filename='images/robust_training_plot.png') }}" alt="Plot Robust" style="width:100%">
+            <div class="text-content">
+                <p><strong>Penjelasan:</strong> Dengan data augmentasi, kurva training dan validasi bergerak **lebih berdekatan**. Ini menunjukkan model tidak *overfitting*. Tugasnya menjadi lebih sulit (makanya akurasi latih lebih rendah), tetapi ia belajar fitur yang lebih umum (generalisasi), sehingga performa validasinya lebih baik dan stabil.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

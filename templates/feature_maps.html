@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Visualisasi Fitur{% endblock %}
+{% block content %}
+    <div class="action-bar">
+        <h2>Melihat ke Dalam CNN (Model ROBUST)</h2>
+        <a href="{{ url_for('feature_maps') }}" class="btn">Ambil Gambar Acak Lain</a>
+    </div>
+
+    <div class="text-content">
+        <p>Halaman ini menunjukkan apa yang "dilihat" oleh model CNN kita pada setiap lapisan konvolusi. Kita menggunakan gambar <strong>{{ true_label }}</strong> di bawah ini sebagai input. Perhatikan bagaimana fitur berubah dari "tepi" sederhana di lapisan awal menjadi "pola" kompleks di lapisan yang lebih dalam.</p>
+    </div>
+
+    <div class="feature-map-container">
+        <div class="input-image-box">
+            <h3>Input Asli</h3>
+            <img src="data:image/png;base64,{{ input_image_b64 }}" alt="Input Asli">
+        </div>
+
+        {% for layer_activation in activations %}
+            <div class="layer-section">
+                <h3>{{ layer_activation.name }}</h3>
+                <div class="feature-map-grid">
+                    {% for feature_map_b64 in layer_activation.maps %}
+                        <img src="data:image/png;base64,{{ feature_map_b64 }}" alt="Feature Map" class="feature-map">
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

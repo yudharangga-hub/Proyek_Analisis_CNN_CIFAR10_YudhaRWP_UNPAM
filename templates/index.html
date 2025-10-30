@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Analisis Interaktif{% endblock %}
+
+{% block content %}
+
+    <div class="action-bar">
+        <h2>Label Sebenarnya: <span class="label">{{ true_label }}</span></h2>
+        <a href="/" class="btn">Ambil Hewan Acak Lain!</a>
+    </div>
+
+    <div class="comparison-grid">
+
+        <div class="grid-item image-item">
+            <h3>Gambar Asli (Bersih)</h3>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ clean_image_b64 }}" alt="Gambar Bersih">
+            </div>
+        </div>
+
+        <div class="grid-item image-item">
+            <h3>Gambar "Rusak" (Noise)</h3>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ noisy_image_b64 }}" alt="Gambar Rusak">
+            </div>
+        </div>
+
+        <div class="grid-item model-card">
+            <h3>Model BASELINE (Tidak Tahan)</h3>
+            <p>Prediksi (Bersih): 
+                <span class="label {{ 'correct' if pred_base_clean == true_label else 'incorrect' }}">
+                    {{ pred_base_clean }}
+                </span>
+            </p>
+            <p>Prediksi (Rusak): 
+                <span class="label {{ 'correct' if pred_base_noisy == true_label else 'incorrect' }}">
+                    {{ pred_base_noisy }}
+                </span>
+            </p>
+        </div>
+
+        <div class="grid-item model-card">
+            <h3>Model ROBUST (Tahan Banting)</h3>
+            <p>Prediksi (Bersih): 
+                <span class="label {{ 'correct' if pred_robust_clean == true_label else 'incorrect' }}">
+                    {{ pred_robust_clean }}
+                </span>
+            </p>
+            <p>Prediksi (Rusak): 
+                <span class="label {{ 'correct' if pred_robust_noisy == true_label else 'incorrect' }}">
+                    {{ pred_robust_noisy }}
+                </span>
+            </p>
+        </div>
+        
+    </div> {% endblock %}
