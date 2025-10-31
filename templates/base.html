@@ -5,24 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Dashboard CNN{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
     <header>
-        <img src="{{ url_for('static', filename='images/logo_unpam.png') }}" alt="Logo UNPAM" class="logo-unpam">
-        <h1>Dashboard Analisis ZOO CNN</h1>
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='images/logo_unpam.png') }}" alt="Logo UNPAM" class="logo-unpam">
+            <h1>J.A.R.V.I.S. VISION: CNN ANALYSIS</h1>
+        </div>
+        <div class="user-info">
+            <strong>Yudha Rangga Wulung Pura</strong><br>
+            NIM: 241012000151<br>
+            Magister Teknik Informatika
+        </div>
     </header>
 
     <div class="scrolling-text-container">
         <div class="scrolling-text">
-            Nama : Yudha Rangga Wulung Pura, NIM : 241012000151
+            Selamat Datang di Dashboard Analisis CNN. Proyek ini mendemonstrasikan perbandingan ketahanan dan interpretabilitas (Grad-CAM) antara model CNN Baseline dan model Optimal.
         </div>
     </div>
     
     <nav class="tab-menu">
         <a href="{{ url_for('home') }}" class="{{ 'active' if request.path == url_for('home') else '' }}">Analisis Interaktif</a>
         <a href="{{ url_for('training_results') }}" class="{{ 'active' if request.path == url_for('training_results') else '' }}">Hasil Pelatihan</a>
-        <a href="{{ url_for('feature_maps') }}" class="{{ 'active' if request.path == url_for('feature_maps') else '' }}">Visualisasi Fitur</a>
+        <a href="{{ url_for('feature_maps') }}" class="{{ 'active' if request.path == url_for('feature_maps') else '' }}">Visualisasi Grad-CAM</a>
+        <a href="{{ url_for('optimization_analysis') }}" class="{{ 'active' if request.path == url_for('optimization_analysis') else '' }}">Analisis Optimalisasi</a>
     </nav>
 
     <div class="container">
@@ -32,6 +41,48 @@
     <footer>
         <p>2025 - Magister Teknik Informatika - Universitas Pamulang</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.getElementById('noiseSlider');
+            if (!slider) return;
+            const noiseLabel = document.getElementById('noise-value-label');
+            const imageIndexStorage = document.getElementById('image-index-storage');
+            const noisyImage = document.getElementById('noisy-image-display');
+            const predBaseNoisy = document.getElementById('pred-base-noisy');
+            const predRobustNoisy = document.getElementById('pred-robust-noisy');
+
+            async function fetchNoisyData() {
+                const noiseLevel = slider.value;
+                const imageIndex = imageIndexStorage.dataset.index;
+                noisyImage.style.opacity = '0.5';
+                const response = await fetch('/update_noise', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        'noise_level': noiseLevel,
+                        'image_index': imageIndex,
+                    }),
+                });
+                const data = await response.json();
+                updateUI(data);
+                noisyImage.style.opacity = '1';
+            }
+            function updateUI(data) {
+                noisyImage.src = 'data:image/png;base64,' + data.noisy_image_b64;
+                predBaseNoisy.innerText = data.pred_base_noisy;
+                predBaseNoisy.className = data.pred_base_noisy === data.true_label ? 'label correct' : 'label incorrect';
+                predRobustNoisy.innerText = data.pred_robust_noisy;
+                predRobustNoisy.className = data.pred_robust_noisy === data.true_label ? 'label correct' : 'label incorrect';
+            }
+            slider.addEventListener('input', function() {
+                noiseLabel.innerText = parseFloat(slider.value).toFixed(2);
+            });
+            slider.addEventListener('change', function() {
+                fetchNoisyData();
+            });
+        });
+    </script>
 
 </body>
 </html>

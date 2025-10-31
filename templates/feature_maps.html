@@ -1,31 +1,63 @@
 {% extends "base.html" %}
-{% block title %}Visualisasi Fitur{% endblock %}
+{% block title %}Fokus Atensi{% endblock %}
 {% block content %}
     <div class="action-bar">
-        <h2>Melihat ke Dalam CNN (Model ROBUST)</h2>
+        <h2>Fokus Atensi: Mengungkap 'Spider-Sense' Model</h2>
         <a href="{{ url_for('feature_maps') }}" class="btn">Ambil Gambar Acak Lain</a>
     </div>
 
     <div class="text-content">
-        <p>Halaman ini menunjukkan apa yang "dilihat" oleh model CNN kita pada setiap lapisan konvolusi. Kita menggunakan gambar <strong>{{ true_label }}</strong> di bawah ini sebagai input. Perhatikan bagaimana fitur berubah dari "tepi" sederhana di lapisan awal menjadi "pola" kompleks di lapisan yang lebih dalam.</p>
+        <p>Bagaimana model tahu itu 'kucing'? Grad-CAM (heatmap) menunjukkan ke mana tepatnya model 'melihat' untuk membuat keputusan. Area yang lebih "panas" (merah) adalah area yang dianggap paling penting oleh model. Mari kita bandingkan fokus atensi kedua model.</p>
+        <p style="text-align: center; font-size: 1.2em;">
+            Label Sebenarnya: <span class="label">{{ true_label }}</span>
+        </p>
     </div>
 
-    <div class="feature-map-container">
-        <div class="input-image-box">
-            <h3>Input Asli</h3>
-            <img src="data:image/png;base64,{{ input_image_b64 }}" alt="Input Asli">
+    <div class="grid-item" style="margin-bottom: 20px;">
+        <h3>Gambar Input Asli</h3>
+        <div class="image-box" style="max-width: 256px; margin: auto;">
+            <img src="data:image/png;base64,{{ original_image_b64 }}" alt="Gambar Asli">
+        </div>
+    </div>
+
+    <div class="comparison-grid">
+        
+        <div class="grid-item">
+            <h3>Fokus Baseline (Kabur)</h3>
+            <p style="text-align: center; font-size: 1.1em;">
+                Prediksi: <span class="label {{ 'correct' if pred_base == true_label else 'incorrect' }}">{{ pred_base }}</span>
+            </p>
+            <h4>Heatmap</h4>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ heat_base_b64 }}" alt="Heatmap Baseline">
+            </div>
+            <h4>Gabungan</h4>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ super_base_b64 }}" alt="Gabungan Baseline">
+            </div>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Analisis:</strong> Perhatikan! Fokus model ini seringkali kabur, salah, atau menyorot latar belakang. Ia 'bingung' dan tidak yakin di mana harus melihat.</p>
+            </div>
+        </div>
+        
+        <div class="grid-item">
+            <h3>Fokus OPTIMAL (Tajam)</h3>
+            <p style="text-align: center; font-size: 1.1em;">
+                Prediksi: <span class="label {{ 'correct' if pred_robust == true_label else 'incorrect' }}">{{ pred_robust }}</span>
+            </p>
+            <h4>Heatmap</h4>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ heat_robust_b64 }}" alt="Heatmap Robust">
+            </div>
+            <h4>Gabungan</h4>
+            <div class="image-box">
+                <img src="data:image/png;base64,{{ super_robust_b64 }}" alt="Gabungan Robust">
+            </div>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Analisis:</strong> Jauh lebih baik. Model ini telah belajar untuk fokus pada fitur yang benar-benar penting (seperti kepala atau seluruh tubuh hewan). Fokusnya tajam dan relevan.</p>
+            </div>
         </div>
 
-        {% for layer_activation in activations %}
-            <div class="layer-section">
-                <h3>{{ layer_activation.name }}</h3>
-                <div class="feature-map-grid">
-                    {% for feature_map_b64 in layer_activation.maps %}
-                        <img src="data:image/png;base64,{{ feature_map_b64 }}" alt="Feature Map" class="feature-map">
-                    {% endfor %}
-                </div>
-            </div>
-        {% endfor %}
     </div>
 
 {% endblock %}

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-
 {% block title %}Analisis Interaktif{% endblock %}
-
 {% block content %}
+
+    <div id="image-index-storage" data-index="{{ image_index }}" style="display: none;"></div>
 
     <div class="action-bar">
         <h2>Label Sebenarnya: <span class="label">{{ true_label }}</span></h2>
@@ -10,7 +10,6 @@
     </div>
 
     <div class="comparison-grid">
-
         <div class="grid-item image-item">
             <h3>Gambar Asli (Bersih)</h3>
             <div class="image-box">
@@ -19,9 +18,12 @@
         </div>
 
         <div class="grid-item image-item">
-            <h3>Gambar "Rusak" (Noise)</h3>
+            <div class="slider-container">
+                <label for="noiseSlider">Tingkat Noise: <span id="noise-value-label">{{ default_noise }}</span></label>
+                <input type="range" min="0" max="1" value="{{ default_noise }}" step="0.05" class="slider" id="noiseSlider">
+            </div>
             <div class="image-box">
-                <img src="data:image/png;base64,{{ noisy_image_b64 }}" alt="Gambar Rusak">
+                <img src="data:image/png;base64,{{ noisy_image_b64 }}" alt="Gambar Terdistorsi" id="noisy-image-display">
             </div>
         </div>
 
@@ -32,25 +34,27 @@
                     {{ pred_base_clean }}
                 </span>
             </p>
-            <p>Prediksi (Rusak): 
-                <span class="label {{ 'correct' if pred_base_noisy == true_label else 'incorrect' }}">
+            <p>Prediksi (Terdistorsi): 
+                <span class="label {{ 'correct' if pred_base_noisy == true_label else 'incorrect' }}" id="pred-base-noisy">
                     {{ pred_base_noisy }}
                 </span>
             </p>
         </div>
 
         <div class="grid-item model-card">
-            <h3>Model ROBUST (Tahan Banting)</h3>
+            <h3>Model OPTIMAL (Tahan Banting)</h3> 
             <p>Prediksi (Bersih): 
                 <span class="label {{ 'correct' if pred_robust_clean == true_label else 'incorrect' }}">
                     {{ pred_robust_clean }}
                 </span>
             </p>
-            <p>Prediksi (Rusak): 
-                <span class="label {{ 'correct' if pred_robust_noisy == true_label else 'incorrect' }}">
+            <p>Prediksi (Terdistorsi): 
+                <span class="label {{ 'correct' if pred_robust_noisy == true_label else 'incorrect' }}" id="pred-robust-noisy">
                     {{ pred_robust_noisy }}
                 </span>
             </p>
         </div>
         
-    </div> {% endblock %}
+    </div>
+
+{% endblock %}

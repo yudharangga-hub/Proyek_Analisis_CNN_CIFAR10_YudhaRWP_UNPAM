@@ -1,28 +1,146 @@
 {% extends "base.html" %}
-{% block title %}Hasil Pelatihan{% endblock %}
+{% block title %}Hasil Pelatihan Interaktif{% endblock %}
+
 {% block content %}
     <div class="action-bar">
-        <h2>Analisis Plot Pelatihan</h2>
+        <h2>Analisis Plot Pelatihan Interaktif</h2>
     </div>
 
     <div class="text-content">
-        <p>Di bawah ini adalah perbandingan hasil pelatihan antara model **Baseline** (hanya dilatih pada data bersih) dan model **Robust** (dilatih dengan data augmentasi, termasuk noise). Plot ini sangat penting untuk memahami *overfitting*.</p>
+        <p>Setiap pahlawan super harus berlatih. Di sinilah kita melihat bagaimana kedua model kita belajar dari waktu ke waktu (dikenal sebagai *epoch*). Arahkan mouse Anda ke grafik untuk melihat detail di setiap sesi latihan. Klik pada legenda (misal: "Training Accuracy") untuk menyembunyikan atau menampilkan garis.</p>
     </div>
 
     <div class="comparison-grid">
+        
         <div class="grid-item">
-            <h3>Model BASELINE</h3>
-            <img src="{{ url_for('static', filename='images/baseline_training_plot.png') }}" alt="Plot Baseline" style="width:100%">
-            <div class="text-content">
-                <p><strong>Penjelasan:</strong> Perhatikan! Garis 'Training Accuracy' (biru) terus naik, sementara 'Validation Accuracy' (oranye) stagnan/turun. Ini adalah tanda klasik **overfitting**. Model menjadi terlalu "hafal" data latih dan tidak bisa menggeneralisasi ke data baru (validasi).</p>
+            <h3>Model BASELINE (Akurasi)</h3>
+            <canvas id="baselineAccChart"></canvas>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Penjelasan:</strong> Model ini terlalu 'menghafal' saat latihan (garis biru). Akibatnya, ia gagal total saat menghadapi data baru (garis oranye). Ini adalah tanda klasik **overfitting**.</p>
             </div>
         </div>
+
         <div class="grid-item">
-            <h3>Model ROBUST</h3>
-            <img src="{{ url_for('static', filename='images/robust_training_plot.png') }}" alt="Plot Robust" style="width:100%">
-            <div class="text-content">
-                <p><strong>Penjelasan:</strong> Dengan data augmentasi, kurva training dan validasi bergerak **lebih berdekatan**. Ini menunjukkan model tidak *overfitting*. Tugasnya menjadi lebih sulit (makanya akurasi latih lebih rendah), tetapi ia belajar fitur yang lebih umum (generalisasi), sehingga performa validasinya lebih baik dan stabil.</p>
+            <h3>Model OPTIMAL (Akurasi)</h3>
+            <canvas id="robustAccChart"></canvas>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Penjelasan:</strong> Model ini berlatih di kondisi 'sulit' (dengan noise). Hasilnya? Ia belajar lebih lambat, tapi jauh lebih siap menghadapi 'kejutan'. Kurvanya 'sehat' dan tidak *overfitting*.</p>
             </div>
         </div>
+
+        <div class="grid-item">
+            <h3>Model BASELINE (Loss)</h3>
+            <canvas id="baselineLossChart"></canvas>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Penjelasan:</strong> "Loss" adalah skor "kesalahan". Perhatikan kesalahan validasi (oranye) mulai naik lagi, sementara model merasa 'pintar' (loss biru turun). Ini buruk!</p>
+            </div>
+        </div>
+
+        <div class="grid-item">
+            <h3>Model OPTIMAL (Loss)</h3>
+            <canvas id="robustLossChart"></canvas>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Penjelasan:</strong> Model ini jujur pada dirinya sendiri. Kesalahan validasi (oranye) terus menurun bersama dengan kesalahan training. Ini adalah model yang "sehat".</p>
+            </div>
+        </div>
+
     </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Konfigurasi Chart.js Tema Iron Man ---
+        const chartGridColor = '#444';
+        const chartTextColor = '#e0e0e0';
+        const trainColor = '#F7CA18'; // Emas
+        const valColor = '#BD1E2B'; // Merah
+
+        const chartOptions = {
+            responsive: true, maintainAspectRatio: true,
+            scales: {
+                x: { grid: { color: chartGridColor }, ticks: { color: chartTextColor } },
+                y: { grid: { color: chartGridColor }, ticks: { color: chartTextColor } }
+            },
+            plugins: {
+                legend: { labels: { color: chartTextColor, font: { size: 14 } } }
+            },
+            interaction: { mode: 'index', intersect: false }
+        };
+        const createLabels = (data) => data.map((_, i) => `Epoch ${i + 1}`);
+
+        async function loadCharts() {
+            try {
+                //
+                // ===============================================
+                // PERBAIKAN UTAMA ADA DI BARIS DI BAWAH INI
+                // Kita sekarang memuat 'optimal_history.json'
+                // ===============================================
+                //
+                const [baselineRes, robustRes] = await Promise.all([
+                    fetch("{{ url_for('static', filename='baseline_history.json') }}"),
+                    fetch("{{ url_for('static', filename='optimal_history.json') }}") 
+                ]);
+                
+                const baselineData = await baselineRes.json();
+                const robustData = await robustRes.json();
+
+                // === 1. Render Baseline Akurasi ===
+                new Chart(document.getElementById('baselineAccChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: createLabels(baselineData.accuracy),
+                        datasets: [
+                            { label: 'Training Accuracy', data: baselineData.accuracy, borderColor: trainColor, tension: 0.1 },
+                            { label: 'Validation Accuracy', data: baselineData.val_accuracy, borderColor: valColor, tension: 0.1 }
+                        ]
+                    }, options: chartOptions
+                });
+
+                // === 2. Render Robust Akurasi ===
+                new Chart(document.getElementById('robustAccChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: createLabels(robustData.accuracy),
+                        datasets: [
+                            { label: 'Training Accuracy', data: robustData.accuracy, borderColor: trainColor, tension: 0.1 },
+                            { label: 'Validation Accuracy', data: robustData.val_accuracy, borderColor: valColor, tension: 0.1 }
+                        ]
+                    }, options: chartOptions
+                });
+                
+                // === 3. Render Baseline Loss ===
+                new Chart(document.getElementById('baselineLossChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: createLabels(baselineData.loss),
+                        datasets: [
+                            { label: 'Training Loss', data: baselineData.loss, borderColor: trainColor, tension: 0.1 },
+                            { label: 'Validation Loss', data: baselineData.val_loss, borderColor: valColor, tension: 0.1 }
+                        ]
+                    }, options: chartOptions
+                });
+                
+                // === 4. Render Robust Loss ===
+                new Chart(document.getElementById('robustLossChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: createLabels(robustData.loss),
+                        datasets: [
+                            { label: 'Training Loss', data: robustData.loss, borderColor: trainColor, tension: 0.1 },
+                            { label: 'Validation Loss', data: robustData.val_loss, borderColor: valColor, tension: 0.1 }
+                        ]
+                    }, options: chartOptions
+                });
+
+            } catch (error) {
+                console.error("Gagal memuat data chart:", error);
+                // Pesan error jika file .json masih belum ada
+                document.getElementById('baselineAccChart').parentElement.innerHTML = "<p style='color:red;'>Gagal memuat data grafik. Pastikan file baseline_history.json dan optimal_history.json ada di folder /static.</p>";
+            }
+        }
+        
+        loadCharts();
+    });
+</script>
+
 {% endblock %}

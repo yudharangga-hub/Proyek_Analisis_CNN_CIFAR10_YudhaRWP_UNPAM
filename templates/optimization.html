@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Analisis Optimalisasi{% endblock %}
+
+{% block content %}
+    <div class="action-bar">
+        <h2>Analisis Optimalisasi & Hyperparameter Tuning</h2>
+    </div>
+
+    <div class="text-content">
+        <p>Model yang "andal" tidak didapat dari tebakan. Model ini adalah hasil dari proses sistematis yang disebut **Hyperparameter Tuning**. Kami menggunakan **KerasTuner** untuk secara otomatis menguji puluhan kombinasi arsitektur CNN dan parameter pelatihan untuk menemukan konfigurasi dengan akurasi validasi tertinggi.</p>
+    </div>
+
+    <div class="comparison-grid">
+        <div class="grid-item">
+            <h3>Konfigurasi Model Optimal (Tuning Selesai)</h3>
+            
+            <p>Setelah pencarian selama **2 jam 33 menit**, KerasTuner menemukan model pemenang dengan **Akurasi Validasi Puncak ~66.7%**. Konfigurasi inilah yang sekarang digunakan sebagai "Model Robust" (Optimal) di seluruh dashboard.</p>
+            
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Hyperparameter</th>
+                        <th>Nilai Optimal Ditemukan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Noise Level (Augmentation)</td>
+                        <td>0.1</td>
+                    </tr>
+                    <tr>
+                        <td>Learning Rate (Adam)</td>
+                        <td>0.0001</td>
+                    </tr>
+                    <tr>
+                        <td>Filter Konvolusi (L1)</td>
+                        <td>64</td>
+                    </tr>
+                     <tr>
+                        <td>Filter Konvolusi (L2)</td>
+                        <td>64</td>
+                    </tr>
+                    <tr>
+                        <td>Unit Dense (FC Layer)</td>
+                        <td>96</td>
+                    </tr>
+                    <tr>
+                        <td>Tingkat Dropout</td>
+                        <td>0.1</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-item">
+            <h3>Perbandingan Akurasi (Baseline vs. Optimal)</h3>
+            <canvas id="finalAccChart"></canvas>
+            <div class="text-content" style="padding-top: 15px;">
+                <p><strong>Analisis:</strong> Grafik ini membandingkan akurasi validasi model **Baseline** (oranye) dengan model **Optimal** (emas). Hasil tuning tidak hanya menemukan model yang lebih tahan *overfitting*, tetapi juga mencapai akurasi puncak yang stabil dan lebih tinggi.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartGridColor = '#444';
+        const chartTextColor = '#e0e0e0';
+        const baselineColor = '#D10000'; // Merah (Baseline)
+            const optimalColor = '#F7CA18'; // Emas (Optimal)
+
+        async function loadComparisonChart() {
+            try {
+                // UBAH NAMA FILE JSON YANG DIMUAT
+            const [baselineRes, robustRes] = await Promise.all([
+                fetch("{{ url_for('static', filename='baseline_history.json') }}"),
+                fetch("{{ url_for('static', filename='robust_history.json') }}") 
+            ]);
+                
+                const baselineData = await baselineRes.json();
+                const robustData = await robustRes.json();
+                
+                // Buat label berdasarkan data terpanjang
+                const labels = Array.from({length: Math.max(baselineData.val_accuracy.length, robustData.val_accuracy.length)}, (_, i) => `Epoch ${i + 1}`);
+
+                const ctx = document.getElementById('finalAccChart').getContext('2d');
+                // UBAH LABEL INI
+            new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                    {
+                        label: 'Akurasi Validasi (Baseline)',
+                        data: baselineData.val_accuracy,
+                                borderColor: baselineColor,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Akurasi Validasi (Optimal)',
+                        data: robustData.val_accuracy,
+                                borderColor: optimalColor,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: true,
+                        scales: {
+                            x: { grid: { color: chartGridColor }, ticks: { color: chartTextColor } },
+                            y: { grid: { color: chartGridColor }, ticks: { color: chartTextColor } }
+                        },
+                        plugins: {
+                            legend: { labels: { color: chartTextColor, font: { size: 14 } } }
+                        },
+                        interaction: { mode: 'index', intersect: false }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Gagal memuat data chart:", error);
+            }
+        }
+        loadComparisonChart();
+    });
+</script>
+{% endblock %}
